@@ -42,19 +42,29 @@ Master.prototype.readHoldingRegisters = function (slave, start, length) {
                         results.push(val.value.readInt16BE(i));
                     }
                 });
-            });
+            })
 
             return results;
         });
-};
+}
 
-/**
- *
- * @param slave
- * @param register
- * @param value
- * @param retryCount
- */
+Master.prototype.read19 = function (slave, start) {
+    var packet = this.createFixedPacketSmall(slave, 0x19, start);
+
+    return this.request(packet)
+        .then(function (buffer) {
+            var data = binary.parse(buffer.slice(2, buffer.length - 2)); //slice header and crc
+            var results = [];
+
+            var vars = data
+                .word8be('hi')
+                .word8be('lo')
+                .vars;
+
+            return [vars.hi, vars.lo, 0.01*(256*vars.hi + vars.lo), buffer.readUInt16BE(2)];
+        });
+}
+
 Master.prototype.writeSingleRegister = function (slave, register, value, retryCount) {
     var packet = this.createFixedPacket(slave, constants.FUNCTION_CODES.WRITE_SINGLE_REGISTER, register, value);
     var self = this;
@@ -79,17 +89,17 @@ Master.prototype.writeSingleRegister = function (slave, register, value, retryCo
 
                     return performRequest(--retry);
                 }).then(function (data) {
-                    resolve(data);
-                });
+                resolve(data);
+            });
         });
     };
     return performRequest(retryCount);
-};
+}
 
 Master.prototype.writeMultipleRegisters = function(slave, start, array){
     var packet = this.createVariousPacket(slave, constants.FUNCTION_CODES.WRITE_MULTIPLE_REGISTERS, start, array);
     return this.request(packet);
-};
+}
 
 /**
  * Create modbus packet with fixed length
@@ -106,8 +116,15 @@ Master.prototype.createFixedPacket = function(slave, func, param, param2){
         .word16be(param)
         .word16be(param2)
         .buffer();
-};
+}
 
+Master.prototype.createFixedPacketSmall = function(slave, func, param){
+    return (new BufferPut())
+        .word8be(slave)
+        .word8be(func)
+        .word16be(param)
+        .buffer();
+}
 /**
  * Create modbus packet with various length
  * @param slave
@@ -125,10 +142,10 @@ Master.prototype.createVariousPacket = function(slave, func, start, array){
 
     _.forEach(array, function(value){
         buf.word16be(value);
-    });
+    })
 
     return buf.buffer();
-};
+}
 
 Master.prototype.request = function request(buffer) {
     var self = this;
@@ -139,14 +156,14 @@ Master.prototype.request = function request(buffer) {
                 throw new errors.crc;
             return response;
         })
-};
+}
 
 Master.prototype.addCrc = function (buffer) {
     return (new BufferPut())
         .put(buffer)
         .word16le(crc.crc16modbus(buffer))
         .buffer();
-};
+}
 
 Master.prototype.validateRequest = function (buffer, slave, func) {
     var vars = binary.parse(buffer)
@@ -155,7 +172,7 @@ Master.prototype.validateRequest = function (buffer, slave, func) {
         .vars;
 
     return vars.slave == slave && vars.func == func;
-};
+}
 
 Master.prototype.checkCrc = function (buffer){
     var pdu = buffer.slice(0, buffer.length-2);

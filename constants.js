@@ -9,9 +9,9 @@ module.exports = {
         WRITE_MULTIPLE_COILS: 15,
         WRITE_MULTIPLE_REGISTERS: 16,
     },
-   // DEBUG: true,
+   DEBUG: true,
     DEFAULT_RETRY_COUNT: 10,
-    RESPONSE_TIMEOUT: 500,
-    QUEUE_TIMEOUT: 50,
+    RESPONSE_TIMEOUT: 5000,
+    QUEUE_TIMEOUT: 150,
     END_PACKET_TIMEOUT: 15,
-};
+}
