@@ -48,6 +48,26 @@ Master.prototype.readHoldingRegisters = function (slave, start, length) {
         });
 }
 
+Master.prototype.readInputRegisters = function (slave, start, length) {
+    var packet = this.createFixedPacket(slave, 0x04, start, length);
+
+    return this.request(packet)
+        .then(function (buffer) {
+            var data = binary.parse(buffer.slice(2, buffer.length - 2)); //slice header and crc
+            var results = [];
+
+            data.word8('byteCount').tap(function (val) {
+                this.buffer('value', val.byteCount).tap(function () {
+                    for (var i = 0; i < val.byteCount; i += 2) {
+                        results.push(val.value.readInt16BE(i));
+                    }
+                });
+            })
+
+            return results;
+        });
+}
+
 Master.prototype.read19 = function (slave, start) {
     var packet = this.createFixedPacketSmall(slave, 0x19, start);
 
