@@ -9,7 +9,7 @@ module.exports = {
         WRITE_MULTIPLE_REGISTERS: 16,
         READ_ONE_REGISTER: 25,
     },
-   DEBUG: true,
+   //DEBUG: true,
     DEFAULT_RETRY_COUNT: 10,
     TASK_RETRY_COUNT: 50,
     RESPONSE_TIMEOUT: 5000,
