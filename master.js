@@ -1,7 +1,6 @@
 var crc = require('crc');
 var BufferPut = require('bufferput');
 var Promise = require("bluebird");
-var SerialHelper = require('./serial-helper');
 var constants = require('./constants');
 var binary = require('binary');
 var bufferEqual = require('buffer-equal');
