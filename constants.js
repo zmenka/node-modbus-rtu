@@ -11,7 +11,7 @@ module.exports = {
     },
    DEBUG: true,
     DEFAULT_RETRY_COUNT: 10,
-    TASK_RETRY_COUNT: 10,
+    TASK_RETRY_COUNT: 50,
     RESPONSE_TIMEOUT: 5000,
     QUEUE_TIMEOUT: 150,
     END_PACKET_TIMEOUT: 15

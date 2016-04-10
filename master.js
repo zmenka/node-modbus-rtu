@@ -56,21 +56,21 @@ function Master(serialPort) {
 Master.prototype.doTask = function (buffer){
     var self = this;
     if (self.currentTask) {
-        constants.DEBUG && console.log('resp', buffer);
 
         try {
             if (buffer.length < 5){
                 throw new Error('Small buffer length' + buffer.length);
             }
-            if ( !self.checkCrc()){
+            if ( !self.checkCrc(buffer)){
                 throw new errors.crc
             }
             if ( !self.validateRequest(buffer, self.currentTask.slave, self.currentTask.func, self.currentTask.len)){
-                throw new Error('Not valid packet for slave ' + self.currentTask.slave + ', func ' + self.currentTask.func + ', len ' + elf.currentTask.len);
+                throw new Error('Not valid packet for slave ' + self.currentTask.slave + ', func ' + self.currentTask.func + ', len ' + self.currentTask.len);
             }
 
             self.currentTask.deferred.resolve(buffer);
         } catch (err){
+            constants.DEBUG && console.log('err', err);
             self.currentTask.errors.push(err)
             self.currentTask.errCount++;
             if (self.currentTask.errCount > constants.TASK_RETRY_COUNT){
@@ -110,6 +110,7 @@ Master.prototype.processQueue = function () {
                 self.currentTask.deferred.reject(err)
             })
             .finally(function () {
+                self.currentTask = null;
                 continueQueue();
             }).done();
     } else {
@@ -154,11 +155,12 @@ Master.prototype.validateRequest = function (buffer, slave, func, len) {
         .word8be('func')
         .word8be('len')
         .vars;
+    constants.DEBUG && console.log('check', vars.slave, vars.func, vars.len);
     if (slave && vars.slave != slave){
         return false
     } else if (func && func!=vars.func){
         return false;
-    } else if (len && len!=vars.len){
+    } else if (len && len * 2!=vars.len){
         return false;
     }
     return true;
@@ -180,7 +182,7 @@ Master.prototype.readInputRegisters = function (slave, start, length) {
 Master.prototype.readRegisters = function (func, slave, start, length) {
     var packet = this.createFixedPacket(slave, func, start, length);
 
-    return this.request(packet, slave, start, length)
+    return this.request(packet, slave, func, length)
         .then(function (buffer) {
             var data = binary.parse(buffer.slice(2, buffer.length - 2)); //slice header and crc
             var results = [];
