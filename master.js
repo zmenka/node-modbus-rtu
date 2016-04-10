@@ -13,6 +13,7 @@ function Master(serialPort) {
     var self = this;
 
     this.queue = [];
+    this.buffers = [];
     this.currentTask = null;
 
     this.serialPort = serialPort;
@@ -35,8 +36,19 @@ function Master(serialPort) {
             resolve(self)
         });
 
-        serialPort.on('data', function (buffer) {
+        var onData = _.debounce(function () {
+            var buffer = Buffer.concat(self.buffers);
+            constants.DEBUG && console.log('resp', buffer);
             self.doTask(buffer)
+
+            self.buffers = [];
+        }, constants.END_PACKET_TIMEOUT);
+
+        serialPort.on('data', function (data) {
+            if (self.currentTask) {
+                self.buffers.push(data);
+                onData(data);
+            }
         });
     })
 }
