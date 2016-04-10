@@ -42,7 +42,7 @@ function Master(serialPort) {
     })
 }
 
-Master.prototype.doTask (buffer){
+Master.prototype.doTask = function (buffer){
     var self = this;
     if (self.currentTask) {
         constants.DEBUG && console.log('resp', buffer);
