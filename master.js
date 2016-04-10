@@ -53,15 +53,24 @@ Master.prototype.read19 = function (slave, start) {
 
     return this.request(packet)
         .then(function (buffer) {
-            var data = binary.parse(buffer.slice(2, buffer.length - 2)); //slice header and crc
-            var results = [];
+            //var data = binary.parse(buffer.slice(2, buffer.length - 2)); //slice header and crc
+            //var results = [];
+            //
+            //var vars = data
+            //    .word8be('hi')
+            //    .word8be('lo')
+            //    .vars;
 
-            var vars = data
-                .word8be('hi')
-                .word8be('lo')
-                .vars;
+            return buffer.readUInt16BE(2);
+        });
+}
 
-            return [vars.hi, vars.lo, 0.01*(256*vars.hi + vars.lo), buffer.readUInt16BE(2)];
+Master.prototype.startRead = function (slave, start, length) {
+    var packet = this.createFixedPacket(slave, 0x08, start, length);
+
+    return this.request(packet)
+        .then(function (buffer) {
+            return [];
         });
 }
 
