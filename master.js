@@ -103,8 +103,9 @@ Master.prototype.processQueue = function () {
         }, constants.QUEUE_TIMEOUT) //pause between calls
     }
 
-    if (this.queue.length) {
+    if (this.queue.length && !this.currentTask) {
         this.currentTask = self.queue.shift();
+        constants.DEBUG && console.log('processQueue', this.queue.length, this.currentTask && this.currentTask.buffer);
         this.write(this.currentTask.buffer, this.currentTask.deferred, !this.currentTask.slave && !this.currentTask.func && !this.currentTask.len)
             .catch(function(err){
                 self.currentTask.deferred.reject(err)
@@ -112,7 +113,7 @@ Master.prototype.processQueue = function () {
             .finally(function () {
                 self.currentTask = null;
                 continueQueue();
-            }).done();
+            });
     } else {
         continueQueue();
     }
